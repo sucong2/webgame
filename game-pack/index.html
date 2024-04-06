@@ -1,58 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Game Title</title>
-<style>
-    /* 간단한 스타일링. 게임 보드와 플레이어를 표시하기 위한 기본 스타일입니다. */
-    #game-board {
-        width: 320px;
-        height: 320px;
-        border: 1px solid black;
-        display: grid;
-        grid-template: repeat(8, 1fr) / repeat(8, 1fr);
-    }
-    .player {
-        width: 100%;
-        height: 100%;
-        background-color: red; /* 플레이어는 빨간색으로 표시 */
-    }
-    .spy {
-        width: 100%;
-        height: 100%;
-        background-color: blue; /* 스파이는 파란색으로 표시 */
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>Game Title</title>
+    <style>
+        #game-board {
+            width: 320px;
+            height: 320px;
+            border: 1px solid black;
+            display: grid;
+            grid-template: repeat(8, 40px) / repeat(8, 40px);
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        .player {
+            background-color: red;
+        }
+        .spy {
+            background-color: blue;
+        }
+    </style>
 </head>
 <body>
-<div id="game-board">
-    <!-- 게임 보드. 실제 게임 요소는 JavaScript를 통해 동적으로 생성됩니다. -->
-</div>
+<div id="game-board"></div>
+<div id="score"></div>
 
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 <script>
-    var socket = io(); // 서버와의 Socket.IO 연결 초기화
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    var gameBoard = document.getElementById('game-board');
 
-    // 키보드 이벤트 리스너를 추가하여 플레이어의 이동을 처리
-    document.addEventListener('keydown', function(event) {
-        var move = { up: false, down: false, left: false, right: false };
-        switch (event.key) {
-            case 'ArrowUp':
-                move.up = true;
-                break;
-            case 'ArrowDown':
-                move.down = true;
-                break;
-            case 'ArrowLeft':
-                move.left = true;
-                break;
-            case 'ArrowRight':
-                move.right = true;
-                break;
-            default:
-                return; // 관심 있는 키가 아닐 경우 아무것도 하지 않음
+    // 게임 보드 초기화
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+            let cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = 'cell-' + i + '-' + j;
+            gameBoard.appendChild(cell);
         }
-        socket.emit('move', move); // 서버로 이동 명령 전송
+    }
+
+    // 서버로부터 위치 업데이트 받기
+    socket.on('update_position', function(data) {
+        var cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove('player', 'spy');
+        });
+        var playerCell = document.getElementById('cell-' + data.x + '-' + data.y);
+        playerCell.classList.add('player');
+    });
+
+    // 게임 오버 처리
+    socket.on('game_over', function() {
+        alert("Game Over");
+        // 여기서 게임 오버 화면 논리를 추가할 수 있습니다.
+    });
+
+    // 점수 업데이트 처리
+    socket.on('update_score', function(data) {
+        document.getElementById('score').innerText = "Spy Score: " + data.spy_score;
+    });
+
+    // 플레이어 이동 키 이벤트 처리
+    document.addEventListener('keydown', function(event) {
+        var move = '';
+        switch (event.key) {
+            case 'ArrowUp': move = 'up'; break;
+            case 'ArrowDown': move = 'down'; break;
+            case 'ArrowLeft': move = 'left'; break;
+            case 'ArrowRight': move = 'right'; break;
+            default: return; // 다른 키는 무시
+        }
+        socket.emit('move', { direction: move });
     });
 </script>
 </body>
