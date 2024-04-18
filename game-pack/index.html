@@ -30,53 +30,6 @@
 <div id="score"></div>
 
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-<script>
-    var socket = io.connect('http://' + document.domain + ':' + location.port);
-    var gameBoard = document.getElementById('game-board');
-
-    // 게임 보드 초기화
-    for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-            let cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.id = 'cell-' + i + '-' + j;
-            gameBoard.appendChild(cell);
-        }
-    }
-
-    // 서버로부터 위치 업데이트 받기
-    socket.on('update_position', function(data) {
-        var cells = document.querySelectorAll('.cell');
-        cells.forEach(cell => {
-            cell.classList.remove('player', 'spy');
-        });
-        var playerCell = document.getElementById('cell-' + data.x + '-' + data.y);
-        playerCell.classList.add('player');
-    });
-
-    // 게임 오버 처리
-    socket.on('game_over', function() {
-        alert("Game Over");
-        // 여기서 게임 오버 화면 논리를 추가할 수 있습니다.
-    });
-
-    // 점수 업데이트 처리
-    socket.on('update_score', function(data) {
-        document.getElementById('score').innerText = "Spy Score: " + data.spy_score;
-    });
-
-    // 플레이어 이동 키 이벤트 처리
-    document.addEventListener('keydown', function(event) {
-        var move = '';
-        switch (event.key) {
-            case 'ArrowUp': move = 'up'; break;
-            case 'ArrowDown': move = 'down'; break;
-            case 'ArrowLeft': move = 'left'; break;
-            case 'ArrowRight': move = 'right'; break;
-            default: return; // 다른 키는 무시
-        }
-        socket.emit('move', { direction: move });
-    });
-</script>
+<script src="function.js"></script> <!-- JavaScript 파일 포함 -->
 </body>
 </html>
